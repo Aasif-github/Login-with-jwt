@@ -159,3 +159,112 @@ The choice depends on your application's specific needs and the type of response
 
 
 - At the time of login we have to create access token & refresh token, and save only RT in DB
+- Explanation
+Let's go through the "why" behind each part of the `handleLogin` function to understand the rationale and importance of each step.
+
+### 1. Extracting Cookies and Request Body
+```javascript
+const cookies = req.cookies;
+console.log(`cookie available at login: ${JSON.stringify(cookies)}`);
+const { user, pwd } = req.body;
+if (!user || !pwd) return res.status(400).json({ 'message': 'Username and password are required.' });
+```
+**Why?**
+- **Cookies**: Extracting cookies is necessary to check for the presence of a refresh token, which might be used for token reuse detection.
+- **Request Body**: Extracting `user` and `pwd` from the request body is essential for authenticating the user.
+- **Validation**: Checking if `user` and `pwd` are present ensures that the request is valid. Returning a `400 Bad Request` if either is missing helps prevent unnecessary database queries and provides immediate feedback to the client.
+
+### 2. Finding the User in the Database
+```javascript
+const foundUser = await User.findOne({ username: user }).exec();
+if (!foundUser) return res.sendStatus(401); // Unauthorized 
+```
+**Why?**
+- **Database Query**: Searching for the user in the database is necessary to verify that the username exists.
+- **Authorization**: Returning `401 Unauthorized` if the user is not found ensures that only valid users can proceed, preventing unauthorized access.
+
+### 3. Password Validation
+```javascript
+const match = await bcrypt.compare(pwd, foundUser.password);
+if (match) {
+    const roles = Object.values(foundUser.roles).filter(Boolean);
+```
+**Why?**
+- **Password Comparison**: Using bcrypt to compare the provided password with the stored hashed password ensures that the user’s credentials are valid without exposing the plaintext password.
+- **Roles Extraction**: Extracting roles is important for generating the JWT payload with appropriate access control information.
+
+### 4. Creating JWT Tokens
+```javascript
+const accessToken = jwt.sign(
+    {
+        "UserInfo": {
+            "username": foundUser.username,
+            "roles": roles
+        }
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: '10s' }
+);
+const newRefreshToken = jwt.sign(
+    { "username": foundUser.username },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: '1d' }
+);
+```
+**Why?**
+- **Access Token**: The access token is used for short-term authentication and includes user info and roles. Setting a short expiration time (e.g., 10 seconds in the example) limits the window during which the token can be exploited if compromised.
+- **Refresh Token**: The refresh token allows for issuing new access tokens without requiring the user to log in again. A longer expiration time (e.g., 1 day) reduces the frequency of login prompts while maintaining security.
+
+### 5. Refresh Token Handling
+```javascript
+let newRefreshTokenArray =
+    !cookies?.jwt
+        ? foundUser.refreshToken
+        : foundUser.refreshToken.filter(rt => rt !== cookies.jwt);
+```
+**Why?**
+- **Token Array Update**: This ensures that the new refresh token array either remains the same if no JWT cookie is present or filters out the current JWT cookie, maintaining a clean token list.
+
+### 6. Handling Refresh Token Reuse and Cleanup
+```javascript
+if (cookies?.jwt) {
+    const refreshToken = cookies.jwt;
+    const foundToken = await User.findOne({ refreshToken }).exec();
+
+    // Detected refresh token reuse!
+    if (!foundToken) {
+        console.log('attempted refresh token reuse at login!')
+        // clear out ALL previous refresh tokens
+        newRefreshTokenArray = [];
+    }
+
+    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+}
+```
+**Why?**
+- **Reuse Detection**: Checking if the refresh token exists in any user’s token list helps detect potential token reuse, which could indicate token theft or replay attacks.
+- **Clearing Cookies**: Clearing the old JWT cookie ensures that compromised tokens are invalidated and cannot be reused.
+
+### 7. Saving New Refresh Token
+```javascript
+foundUser.refreshToken = [...newRefreshTokenArray, newRefreshToken];
+const result = await foundUser.save();
+console.log(result);
+console.log(roles);
+```
+**Why?**
+- **Token Persistence**: Updating the user’s refresh token list with the new refresh token ensures that the token can be used for subsequent authentication requests.
+- **Logging**: Logging the result and roles aids in debugging and provides a record of the operation.
+
+### 8. Sending the Response
+```javascript
+res.cookie('jwt', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'None', maxAge: 24 * 60 * 60 * 1000 });
+res.json({ roles, accessToken });
+```
+**Why?**
+- **Secure Cookie**: Setting the refresh token as a secure, HttpOnly cookie helps protect it from being accessed through client-side scripts, reducing the risk of XSS attacks.
+- **Response**: Sending the roles and access token to the user allows the client to use the access token for authenticated requests and manage user roles appropriately.
+
+Overall, each step in the `handleLogin` function is designed to enhance security, ensure proper authentication, and handle potential security issues such as token reuse. This approach balances user convenience with robust security practices. If you have any more questions or need further clarification, feel free to ask!
+
+https://github.com/gitdagray/refresh_token_rotation/blob/main/controllers/authController.js
