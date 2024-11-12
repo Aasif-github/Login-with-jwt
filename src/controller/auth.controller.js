@@ -77,7 +77,14 @@ const login = async(req, res) => {
             console.log(result);
 
             // Creates Secure Cookie with refresh token
-            res.cookie('jwt', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 }); // 1 day
+            res.cookie('jwt', newRefreshToken, 
+                {   
+                    httpOnly: true, 
+                    secure: false, 
+                    sameSite: 'strict', // Change to false if testing on localhost without HTTPS
+                    maxAge: 24 * 60 * 60 * 1000,
+                    path: '/' // for all routes  
+                }); // 1 day
         
              
             // Send authorization access token to user
