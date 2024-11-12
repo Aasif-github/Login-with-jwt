@@ -268,3 +268,10 @@ res.json({ roles, accessToken });
 Overall, each step in the `handleLogin` function is designed to enhance security, ensure proper authentication, and handle potential security issues such as token reuse. This approach balances user convenience with robust security practices. If you have any more questions or need further clarification, feel free to ask!
 
 https://github.com/gitdagray/refresh_token_rotation/blob/main/controllers/authController.js
+
+
+***Testing credentials***
+```json
+"username":"Johndeo",
+"password":"12345"
+```
