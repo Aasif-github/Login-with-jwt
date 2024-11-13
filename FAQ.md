@@ -236,3 +236,50 @@ app.get('/protected-route', verifyJWT, (req, res) => {
 ```
 
 When a request hits `/protected-route`, it first goes through the `verifyJWT` middleware. If the token is valid, the request proceeds, and the route handler has access to `req.user`. If the token is invalid or missing, the request is blocked with a `401` or `403` response.
+
+
+# Explain why we send object as data and need to stringify in fetch api before sending it to request api?
+```js
+   const dataObj = { name, phoneNo, reason, note, date, slot };
+
+            fetch(`${currentUrl}/api/v1/book`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dataObj)
+            })
+```
+
+When sending data with the `fetch` API, it's necessary to understand how HTTP requests work and why we stringify objects before sending them:
+
+### 1. **Data Format for HTTP Requests**:
+HTTP requests have a body that represents the data being sent to the server. The server needs to understand the format of this data to process it correctly. For APIs expecting JSON, the `Content-Type` header is set to `'application/json'` to indicate that the data format being sent is JSON.
+
+### 2. **Stringify Process**:
+JavaScript objects cannot be directly sent in the body of a `fetch` request because the body expects a string or binary data. The `JSON.stringify()` method converts the JavaScript object into a JSON string, which can be sent in the request body.
+
+### Why You Need to Stringify:
+- **JavaScript Object**: `{ name, phoneNo, reason, note, date, slot }` is a JavaScript object. It needs to be converted to a format that the `fetch` request can send.
+- **JSON**: A string format that is lightweight and commonly used for data exchange between the client and server. When you call `JSON.stringify(data)`, it transforms the object into a JSON-formatted string like:
+  ```json
+  {
+    "name": "John",
+    "phoneNo": "1234567890",
+    "reason": "appointment",
+    "note": "first-time visit",
+    "date": "2024-11-13",
+    "slot": "10:00 AM"
+  }
+  ```
+
+### How the Server Processes It:
+- **Request Headers**: The `Content-Type: 'application/json'` header tells the server that the incoming data is in JSON format.
+- **Parsing on the Server**: The server reads the body of the request as a string and uses `JSON.parse()` (or equivalent parsing logic) to convert that string back into an object for processing.
+
+### Summary:
+- **Sending objects directly in the body** is not possible because `fetch` expects a string or `Blob`/`BufferSource`/`FormData`.
+- **`JSON.stringify(data)`** converts the object to a JSON string that can be sent in the HTTP request.
+- The **`Content-Type` header** ensures that the server knows the format of the incoming data and parses it accordingly.
+
+Without stringifying, the server would not understand the body content, resulting in parsing errors or unexpected behavior.

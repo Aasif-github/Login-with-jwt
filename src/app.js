@@ -15,7 +15,7 @@ app.use(bodyParser.json()); // or we can use express.json() as well
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-app.use('/v1/api', authRouter);
+app.use('/api/v1', authRouter);
 
 app.get('/health', (req, res) => {
     res.send('ok');
@@ -31,6 +31,7 @@ app.use(express.static(path.join(__dirname, '../frontend/login')));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/login', 'index.html'));
 });
+
 
 // app.get('/', function (req, res) {
 //     // Cookies that have not been signed

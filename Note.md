@@ -269,6 +269,86 @@ Overall, each step in the `handleLogin` function is designed to enhance security
 
 https://github.com/gitdagray/refresh_token_rotation/blob/main/controllers/authController.js
 
+# How Http works ?
+HTTP (Hypertext Transfer Protocol) is the foundational protocol used for transmitting data on the web. It enables communication between clients (e.g., web browsers) and servers (e.g., web servers). Here’s a breakdown of how HTTP works:
+
+### 1. **Client-Server Model**:
+HTTP operates based on the client-server model, where:
+- **Client**: Sends requests. This can be a web browser, mobile app, or any other HTTP client.
+- **Server**: Receives and processes requests, then sends responses back to the client. The server could be hosting web applications, APIs, or static content.
+
+### 2. **HTTP Request-Response Cycle**:
+The communication follows a request-response cycle:
+- **Request**: The client sends an HTTP request to the server, which includes details such as:
+  - **HTTP Method**: Defines the action to be performed (e.g., `GET`, `POST`, `PUT`, `DELETE`).
+  - **URL/URI**: Specifies the resource on the server (e.g., `/api/v1/book`).
+  - **Headers**: Provide metadata about the request (e.g., `Content-Type`, `Authorization`).
+  - **Body**: (optional) Contains data sent with the request, often in `POST` or `PUT` methods (e.g., JSON payload).
+
+- **Response**: The server processes the request and returns an HTTP response containing:
+  - **Status Code**: Indicates the result of the request (e.g., `200 OK`, `404 Not Found`, `500 Internal Server Error`).
+  - **Headers**: Provide metadata about the response (e.g., `Content-Type`, `Cache-Control`).
+  - **Body**: Contains the data returned by the server, such as an HTML page, JSON data, etc.
+
+### 3. **HTTP Methods**:
+Common HTTP methods include:
+- **`GET`**: Requests data from the server (read-only).
+- **`POST`**: Sends data to the server, often to create or update resources.
+- **`PUT`**: Replaces an existing resource or creates a new one at a specified URI.
+- **`DELETE`**: Deletes a specified resource.
+- **`PATCH`**: Partially updates a resource.
+
+### 4. **Request Headers and Response Headers**:
+Headers provide additional information about the request or response. Examples:
+- **`Content-Type`**: Specifies the format of the body (e.g., `application/json`).
+- **`Authorization`**: Used for authentication (e.g., `Bearer token`).
+- **`Cache-Control`**: Directs caching behavior for responses.
+
+### 5. **Status Codes**:
+HTTP responses come with status codes to indicate the outcome of the request:
+- **2xx (Success)**: The request was successfully processed (e.g., `200 OK`, `201 Created`).
+- **3xx (Redirection)**: The client must take additional action to complete the request (e.g., `301 Moved Permanently`).
+- **4xx (Client Error)**: There was an issue with the request (e.g., `400 Bad Request`, `404 Not Found`).
+- **5xx (Server Error)**: The server encountered an error while processing the request (e.g., `500 Internal Server Error`).
+
+### 6. **Connection Types**:
+- **HTTP/1.1**: Supports persistent connections, where multiple requests can be sent over the same connection.
+- **HTTP/2**: Improves performance by multiplexing, allowing multiple requests and responses to be sent simultaneously over a single connection.
+- **HTTP/3**: Uses QUIC protocol for better speed and reliability, especially over unstable networks.
+
+### 7. **Secure HTTP (HTTPS)**:
+- **HTTPS** is HTTP with encryption, ensuring secure data transmission. It uses **SSL/TLS** to encrypt data, protecting it from interception and tampering.
+
+### Example of an HTTP Request:
+```http
+POST /api/v1/book HTTP/1.1
+Host: www.example.com
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "John Doe",
+  "phoneNo": "1234567890",
+  "reason": "appointment"
+}
+```
+
+### Example of an HTTP Response:
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+  "message": "Booking successful",
+  "bookingId": "12345"
+}
+```
+
+### Summary:
+HTTP is a stateless protocol, meaning each request-response pair is independent. To maintain a user session, mechanisms like cookies, tokens, or session management are used. The protocol's simplicity and flexibility have made it the backbone of data communication on the web.
+
+
+
 
 ***Testing credentials***
 ```json

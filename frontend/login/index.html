@@ -9,7 +9,8 @@
 <body>
     <div class="login-box">
         <h2>Login</h2>
-        <form>
+        <form id="login">
+            <div id="err_msg"></div>
           <div class="user-box">
             <input type="text" name="username" id="username" required="">
             <label>Username</label>
@@ -23,6 +24,70 @@
       </div>
 </body>
 <script>
+    const form = document.getElementById('login');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log('here');
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+
+        if(!username || !password){
+            alert('Invalid Input');
+            return false;
+        }
+        
+        const dataObj = { username, password };
+
+       // const currentUrl = `http://localhost:3002`;
+
+       await fetch(`http://localhost:3002/api/v1/login`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataObj),
+            credentials: 'include' // This ensures cookies are sent and received
+        }).then(async (response) => {
+          
+            if (!response.ok) { 
+            throw new Error('Login failed')
+        }
+      //  console.log('My response', await response.json());
+
+        if(response.ok){
+            const tokenData = await response.json();
+            const accessToken = tokenData.accessToken;
+
+            console.log('accessToken--:', accessToken)   
+
+            const dashboardResponse = await fetch(`http://localhost:3002/api/v1/dashboard`, {
+                method:'GET',
+                headers: { 
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+
+            console.log('dashboardResponse', dashboardResponse);
+            
+            if(!dashboardResponse.ok){
+                document.getElementById('err_msg').innerHTML = 'Invalid Token - Login failed!'
+            }
+
+            if(dashboardResponse.ok){
+                
+                //window.location.href='api/v1/dashboard';
+
+                console.log(dashboardResponse.url);
+            }
+        }
+             
+           
+        }).catch((err)=>{
+            console.log('err',err);
+        })
+    });
+
     
 </script>
 </html>
